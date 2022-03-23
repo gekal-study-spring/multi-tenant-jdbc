@@ -1,6 +1,5 @@
 package cn.gekal.sample.multitenantjdbc.security;
 
-import cn.gekal.sample.multitenantjdbc.security.MultiTenantUser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
