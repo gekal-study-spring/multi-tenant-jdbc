@@ -1,0 +1,7 @@
+### customers from db1
+GET http://localhost:8080/customers HTTP/1.1
+Authorization: Basic user11:pw
+
+### customers from db2
+GET http://localhost:8080/customers HTTP/1.1
+Authorization: Basic user21:pw
