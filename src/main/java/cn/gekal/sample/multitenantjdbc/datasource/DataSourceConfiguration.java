@@ -56,6 +56,23 @@ public class DataSourceConfiguration {
         return mds;
     }
 
+    /**
+     * 認証用データソース。テナントを判別する前に参照する必要があるため、
+     * ルーティング対象（ds*）には含めず独立したデータベース（db0 / 5430）を使う。
+     */
+    @Bean
+    DataSource authDataSource() {
+
+        var dataSource = dataSource(5430);
+
+        var initializer = new ResourceDatabasePopulator(new ClassPathResource("auth-schema.sql"),
+                new ClassPathResource("auth-data.sql"));
+        initializer.execute(dataSource);
+        LOGGER.info("initialized auth datasource");
+
+        return dataSource;
+    }
+
     @Bean
     DataSource ds1() {
         return dataSource(5431);
