@@ -22,10 +22,12 @@ gradle/libs.versions.toml    バージョンカタログ（正）
 
 app/
   src/main/java/cn/gekal/sample/multitenantjdbc/
-    datasource/  MultiTenantDataSource（ルーティング）, DataSourceConfiguration
+    datasource/  MultiTenantDataSource（ルーティング）,
+                 DataSourceConfiguration, MultiTenantDataSourceProperties
     security/    JdbcUserDetailsService, MultiTenantUser, SecurityConfiguration
     router/      RouterConfiguration（GET /customers）
     model/       Customer
+  src/main/resources/application.yaml   DataSource 接続設定（app.datasource.*）ほか
 
 migration/
   Dockerfile

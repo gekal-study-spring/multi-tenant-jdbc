@@ -12,6 +12,9 @@ dependencies {
 
     runtimeOnly libs.postgresql
 
+    // @ConfigurationProperties（app.datasource.*）のメタデータ生成
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
     // bootRun 時に compose 環境（db0/db1/db2）を自動で起動・停止する
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 
@@ -19,4 +22,10 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     // JUnit Platform の起動に必要（Spring Initializr 4.1.x が生成する構成に合わせる）
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('bootRun') {
+    // compose.yaml はリポジトリ直下にある。起動時の作業ディレクトリに依存しないよう
+    // 絶対パスで spring-boot-docker-compose に渡す。
+    systemProperty 'spring.docker.compose.file', rootProject.file('compose.yaml')
 }

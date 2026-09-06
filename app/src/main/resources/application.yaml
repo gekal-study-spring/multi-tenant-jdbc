@@ -7,8 +7,24 @@ spring:
 
   docker:
     compose:
-      # bootRun のワーキングディレクトリは app/ なのでリポジトリ直下を指す
-      file: ../compose.yaml
+      # compose.yaml の場所は bootRun（app/build.gradle）が絶対パスで渡す。
+      # Gradle を介さず起動した場合は作業ディレクトリの compose.yaml を自動検出し、
+      # 見つからなければ何もしない（アプリは起動する）。
       # アプリ起動時に `up`、停止時に `stop`（コンテナは残すのでマイグレーション結果も保持される）
       lifecycle-management: start-and-stop
       # migration サービスは profile 'migrate' に隔離してあるため自動起動されない
+
+# DataSource の接続設定はここに集約する（DataSourceConfiguration が読み込む）
+app:
+  datasource:
+    username: user
+    password: pw
+    # 認証DB（users テーブル）
+    auth:
+      url: jdbc:postgresql://localhost:5430/user
+    # テナントDB（キー = tenantId）
+    tenants:
+      "1":
+        url: jdbc:postgresql://localhost:5431/user
+      "2":
+        url: jdbc:postgresql://localhost:5432/user

@@ -15,6 +15,11 @@ services:
       interval: 3s
       timeout: 3s
       retries: 10
+    labels:
+      # spring-boot-docker-compose には接続情報を自動生成させない
+      # （DataSource はアプリ側の app.datasource.* で定義しているため）。
+      # 起動・停止・healthy 待ちは `docker compose up --wait` が行うので影響しない。
+      org.springframework.boot.ignore: "true"
 
   # テナント1のDB（customer テーブル）
   db1:
@@ -31,6 +36,8 @@ services:
       interval: 3s
       timeout: 3s
       retries: 10
+    labels:
+      org.springframework.boot.ignore: "true"
 
   # テナント2のDB（customer テーブル）
   db2:
@@ -47,6 +54,8 @@ services:
       interval: 3s
       timeout: 3s
       retries: 10
+    labels:
+      org.springframework.boot.ignore: "true"
 
   # Flyway マイグレーション。3つのDBが healthy になってから一度だけ実行して終了する。
   #

@@ -1,60 +1,50 @@
 package cn.gekal.sample.multitenantjdbc.datasource;
 
 import com.zaxxer.hikari.HikariDataSource;
-import java.util.Map;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
-import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 @Configuration
+@EnableConfigurationProperties(MultiTenantDataSourceProperties.class)
 public class DataSourceConfiguration {
 
-  private static DataSource dataSource(int port) {
+  private final MultiTenantDataSourceProperties properties;
 
-    var dsp = new DataSourceProperties();
-    dsp.setUsername("user");
-    dsp.setPassword("pw");
-    dsp.setUrl("jdbc:postgresql://localhost:" + port + "/user");
-
-    return dsp.initializeDataSourceBuilder().type(HikariDataSource.class).build();
+  DataSourceConfiguration(MultiTenantDataSourceProperties properties) {
+    this.properties = properties;
   }
 
-  /** テナントごとのデータソースをルーティングキー（tenantId）で引けるようにまとめる。 スキーマ・初期データの投入は migration モジュールの責務であり、ここでは行わない。 */
-  @Bean
-  @Primary
-  DataSource multiTenantDataSource(Map<String, DataSource> dataSources) {
-
-    var prefix = "ds";
-    var map =
-        dataSources.entrySet().stream()
-            .filter(e -> e.getKey().startsWith(prefix))
-            .collect(
-                Collectors.toMap(
-                    e -> (Object) Integer.parseInt(e.getKey().substring(prefix.length())),
-                    e -> (Object) e.getValue()));
-
-    var mds = new MultiTenantDataSource();
-    mds.setTargetDataSources(map);
-
-    return mds;
+  private DataSource dataSource(MultiTenantDataSourceProperties.Target target) {
+    return DataSourceBuilder.create()
+        .type(HikariDataSource.class)
+        .url(target.url())
+        .username(properties.username())
+        .password(properties.password())
+        .build();
   }
 
-  /** 認証用データソース。テナントを判別する前に参照する必要があるため、 ルーティング対象（ds*）には含めず独立したデータベース（db0 / 5430）を使う。 */
+  /** 認証用データソース。テナントを判別する前に参照するため、ルーティング対象には含めない。 */
   @Bean
   DataSource authDataSource() {
-    return dataSource(5430);
+    return dataSource(properties.auth());
   }
 
+  /** tenantId をルーティングキーに、テナントごとのデータソースへ切り替える。 */
   @Bean
-  DataSource ds1() {
-    return dataSource(5431);
-  }
+  @Primary
+  DataSource multiTenantDataSource() {
+    var targets =
+        properties.tenants().entrySet().stream()
+            .collect(
+                Collectors.toMap(e -> (Object) e.getKey(), e -> (Object) dataSource(e.getValue())));
 
-  @Bean
-  DataSource ds2() {
-    return dataSource(5432);
+    var mds = new MultiTenantDataSource();
+    mds.setTargetDataSources(targets);
+    return mds;
   }
 }
