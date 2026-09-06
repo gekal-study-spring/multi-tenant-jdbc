@@ -2,6 +2,16 @@ version: '3.1'
 
 services:
 
+  db0:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      PGUSER: user
+      POSTGRES_PASSWORD: pw
+    ports:
+      - "5430:5432"
+
   db1:
     image: postgres:latest
     restart: always
