@@ -4,10 +4,16 @@ plugins {
 }
 
 dependencies {
+    // このアプリが実際に使う starter だけを入れる
+    // （ルーティング用の JdbcTemplate / HTTP Basic 認証 / Servlet MVC）
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
     runtimeOnly libs.postgresql
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    // JUnit Platform の起動に必要（Spring Initializr 4.1.x が生成する構成に合わせる）
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
