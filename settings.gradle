@@ -1,1 +1,13 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
 rootProject.name = 'multi-tenant-jdbc'
+
+// app: マルチテナントのルーティングを行うアプリケーション本体
+// migration: Flyway マイグレーション（アプリ起動時には流さない独立モジュール）
+include 'app'
+include 'migration'

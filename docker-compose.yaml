@@ -1,7 +1,6 @@
-version: '3.1'
-
 services:
 
+  # 認証DB（users テーブル）
   db0:
     image: postgres:latest
     restart: always
@@ -11,7 +10,13 @@ services:
       POSTGRES_PASSWORD: pw
     ports:
       - "5430:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
+  # テナント1のDB（customer テーブル）
   db1:
     image: postgres:latest
     restart: always
@@ -21,7 +26,13 @@ services:
       POSTGRES_PASSWORD: pw
     ports:
       - "5431:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
+  # テナント2のDB（customer テーブル）
   db2:
     image: postgres:latest
     restart: always
@@ -31,6 +42,30 @@ services:
       POSTGRES_PASSWORD: pw
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  # Flyway マイグレーション。3つのDBが healthy になってから一度だけ実行して終了する。
+  migration:
+    build:
+      context: .
+      dockerfile: migration/Dockerfile
+    environment:
+      AUTH_DB_URL: jdbc:postgresql://db0:5432/user
+      TENANT1_DB_URL: jdbc:postgresql://db1:5432/user
+      TENANT2_DB_URL: jdbc:postgresql://db2:5432/user
+      DB_USER: user
+      DB_PASSWORD: pw
+    depends_on:
+      db0:
+        condition: service_healthy
+      db1:
+        condition: service_healthy
+      db2:
+        condition: service_healthy
 
   adminer:
     image: adminer:latest

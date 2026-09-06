@@ -1,0 +1,6 @@
+spring:
+  sql:
+    init:
+      # スキーマ・初期データの投入は migration モジュール（Flyway）の責務。
+      # アプリ側では一切流さない。
+      mode: never
