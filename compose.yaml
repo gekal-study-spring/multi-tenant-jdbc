@@ -1,0 +1,91 @@
+services:
+
+  # 認証DB（users テーブル）
+  db0:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      PGUSER: user
+      POSTGRES_PASSWORD: pw
+    ports:
+      - "5430:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    labels:
+      # spring-boot-docker-compose には接続情報を自動生成させない
+      # （DataSource はアプリ側の app.datasource.* で定義しているため）。
+      # 起動・停止・healthy 待ちは `docker compose up --wait` が行うので影響しない。
+      org.springframework.boot.ignore: "true"
+
+  # テナント1のDB（customer テーブル）
+  db1:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      PGUSER: user
+      POSTGRES_PASSWORD: pw
+    ports:
+      - "5431:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    labels:
+      org.springframework.boot.ignore: "true"
+
+  # テナント2のDB（customer テーブル）
+  db2:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      PGUSER: user
+      POSTGRES_PASSWORD: pw
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    labels:
+      org.springframework.boot.ignore: "true"
+
+  # Flyway マイグレーション。3つのDBが healthy になってから一度だけ実行して終了する。
+  #
+  # profile 'migrate' に隔離しているため、素の `docker compose up` や
+  # spring-boot-docker-compose による自動起動（`up --wait`）の対象にはならない。
+  # 一度きり終了するコンテナは `up --wait` と相性が悪い（再実行時に "exited (0)" で失敗する）ため。
+  # マイグレーションは次のいずれかで明示的に実行する:
+  #   ./gradlew :migration:run
+  #   docker compose --profile migrate run --rm migration
+  migration:
+    profiles: ["migrate"]
+    build:
+      context: .
+      dockerfile: migration/Dockerfile
+    environment:
+      AUTH_DB_URL: jdbc:postgresql://db0:5432/user
+      TENANT1_DB_URL: jdbc:postgresql://db1:5432/user
+      TENANT2_DB_URL: jdbc:postgresql://db2:5432/user
+      DB_USER: user
+      DB_PASSWORD: pw
+    depends_on:
+      db0:
+        condition: service_healthy
+      db1:
+        condition: service_healthy
+      db2:
+        condition: service_healthy
+
+  adminer:
+    image: adminer:latest
+    restart: always
+    ports:
+      - "8088:8080"

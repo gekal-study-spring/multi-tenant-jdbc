@@ -1,0 +1,15 @@
+plugins {
+    // 実行可能なマイグレーションランナーとしてビルドする（application プラグインが bin/migration を生成）
+    id 'application'
+}
+
+dependencies {
+    implementation libs.flyway.core
+    // Flyway 10 以降は DB 種別ごとのモジュールが必須
+    runtimeOnly libs.flyway.database.postgresql
+    runtimeOnly libs.postgresql
+}
+
+application {
+    mainClass = 'cn.gekal.sample.multitenantjdbc.migration.MigrationRunner'
+}
