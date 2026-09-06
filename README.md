@@ -4,12 +4,14 @@
 接続先データベースを切り替えるサンプル。認証は HTTP Basic、DB アクセスは
 `JdbcTemplate`。
 
-- Spring Boot 4.1.1 / Java 17
+- Spring Boot 4.1.1 / Java 21
 - Gradle マルチモジュール
   - `app` … アプリケーション本体
   - `migration` … Flyway マイグレーション（アプリ起動時には流さない独立モジュール）
 - 依存バージョンは `gradle/libs.versions.toml` が正
 - コード整形は Spotless（Google Java Format）: `./gradlew spotlessApply`
+- `./gradlew :app:bootRun` すると spring-boot-docker-compose が `compose.yaml` の
+  `db0/db1/db2` を自動起動し、アプリ停止時に停止する
 
 ## モジュール構成
 
@@ -46,31 +48,35 @@ migration/
 `users.tenant_id` がリクエストのルーティング先テナントを決める。認証前に参照する
 必要があるため、認証DBはテナントDBとは分けている。
 
-## 1. データベースを起動する
+## 1. マイグレーションを実行する（初回のみ）
 
-```shell
-docker compose up -d db0 db1 db2
-```
-
-## 2. マイグレーションを実行する
-
-アプリは起動時にマイグレーションを流さない。次のいずれかで明示的に実行する。
+アプリは起動時にマイグレーションを流さない。`migration` サービスは compose の
+profile `migrate` に隔離してあり、通常の `docker compose up` では起動しない。
+次のいずれかで明示的に実行する。
 
 ```shell
 # ローカルの Gradle から（既定でローカルの db0/db1/db2 に接続）
 ./gradlew :migration:run
 
-# または compose の migration サービス（db0/db1/db2 が healthy になってから実行）
-docker compose run --rm migration
+# または compose の migration サービス
+docker compose --profile migrate run --rm migration
 ```
 
-## 3. アプリケーションを起動する
+`./gradlew :migration:run` はローカルの `db0/db1/db2` が起動している前提。
+先に `docker compose up -d db0 db1 db2` するか、一度アプリを起動しておく。
+
+マイグレーション結果はコンテナのボリュームに残るため、通常はこの手順は初回だけ。
+
+## 2. アプリケーションを起動する
 
 ```shell
 ./gradlew :app:bootRun
 ```
 
-## 4. マルチテナントの動作確認
+`db0/db1/db2` は spring-boot-docker-compose が自動で起動する（停止時に `stop`）。
+手動で起動しておいても `--no-recreate` で再利用される。
+
+## 3. マルチテナントの動作確認
 
 ユーザーは認証DB（`db0`）の `users` テーブルから読み込まれ、`tenant_id` で
 接続先テナントDBが切り替わる。

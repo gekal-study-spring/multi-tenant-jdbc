@@ -49,7 +49,15 @@ services:
       retries: 10
 
   # Flyway マイグレーション。3つのDBが healthy になってから一度だけ実行して終了する。
+  #
+  # profile 'migrate' に隔離しているため、素の `docker compose up` や
+  # spring-boot-docker-compose による自動起動（`up --wait`）の対象にはならない。
+  # 一度きり終了するコンテナは `up --wait` と相性が悪い（再実行時に "exited (0)" で失敗する）ため。
+  # マイグレーションは次のいずれかで明示的に実行する:
+  #   ./gradlew :migration:run
+  #   docker compose --profile migrate run --rm migration
   migration:
+    profiles: ["migrate"]
     build:
       context: .
       dockerfile: migration/Dockerfile

@@ -12,6 +12,9 @@ dependencies {
 
     runtimeOnly libs.postgresql
 
+    // bootRun 時に compose 環境（db0/db1/db2）を自動で起動・停止する
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     // JUnit Platform の起動に必要（Spring Initializr 4.1.x が生成する構成に合わせる）

@@ -19,7 +19,7 @@ subprojects {
     java {
         // Java のバージョンは toolchain で固定する
         toolchain {
-            languageVersion = JavaLanguageVersion.of(17)
+            languageVersion = JavaLanguageVersion.of(21)
         }
     }
 
